@@ -15,4 +15,7 @@ int main(void)
   mraa_init();
   ledPin = mraa_gpio_init(LED_PIN);
   PushB = mraa_gpio_init(SW_PIN);
+  mraa_gpio_dir(ledPin, MRAA_GPIO_OUT);
+  mraa_gpio_dir(PushB, MRAA_GPIO_IN);
+  
   
