@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <mraa.h>
-#include "rgb_lcd.h"
+#include <rgb_lcd.h>
 
 #define LED_PIN 13
 #define SW_PIN 5
