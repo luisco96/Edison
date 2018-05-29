@@ -2,27 +2,26 @@
 #include <stdio.h>
 #include <time.h>
 #include <mraa.h>
-<<<<<<< HEAD
-#include <rgb_lcd.h>
-=======
-#include <string> 
->>>>>>> f638fdbe76aa94154ced463ce3f4e45dc482cc62
+#include <string>
+#include <stdlib.h> 
 
 #define LED_PIN 13
 #define SW_PIN 5
 
-
-int contador = 0, c = 0, PBreset, PBon, PBevent;
+//using namespace std;
+int contador = 0, c = 0, PBreset, PBon, PBevent, con;
 bool on;
 uint8_t buf[2]; 
+std::string constring;
 mraa_gpio_context ledPin;
 mraa_gpio_context PushB;
-mraa_i2c_context lcd;
+mraa_i2c_context i2c;
 
 void LCD_init();
 void SetBGColor(int red, int blue, int green);
 void LCD_home();
-void LCD_write(string msg);
+void LCD_write(std::string msg);
+void LCD_clear();
 
 int main(void)
 {
@@ -33,7 +32,7 @@ int main(void)
   mraa_gpio_dir(PushB, MRAA_GPIO_IN);
   mraa_gpio_write(ledPin, 0);
   i2c = mraa_i2c_init(0);
-  mraa_i2c_adress(i2c, 0x3E);
+  mraa_i2c_address(i2c, 0x3E);
   
   LCD_init();
   SetBGColor(255,0,250);
@@ -41,23 +40,26 @@ int main(void)
   cbreak();
   noecho();
   nodelay(stdscr, true);
-  printw("Contador, oprimir tecla o para comenzar\n Push button\
-	en Edison aumenta contador\n Reset: tecla r\n");
-	refresh();
+  printw("Contador, oprimir tecla o para comenzar\n Push button	en Edison aumenta contador\n Reset: tecla r\n");
+  refresh();
+  LCD_write("Hola");
 	
 	while(1)
 	{
-		if((PBon == getch()) == 'o') 
+		if((PBon = getch()) == 'o') 
 		{
-			on == true;
-			printw("Encendido/n");
+			on = true;
+			printw("Encendido\n");
 			refresh();
+			LCD_clear();
 			LCD_home();
-			LCD_write("Encendido");
+			LCD_write(   "Encendido");
 		}
-		if((PBreset == getch()) == 'r') {
-			on == false;
-			printw("Reinicio")
+		if((PBreset = getch()) == 'r') {
+			on = false;
+			contador = 0;
+			LCD_clear();
+			printw("Reinicio\n");
 			refresh();
 			LCD_home();
 			LCD_write("Reinicio");
@@ -65,9 +67,11 @@ int main(void)
 			}
 		while(on == 1)
 		{
-			if((PBreset == getch()) == 'r') {
-			on == false;
-			printw("Reinicio")
+			if((PBreset = getch()) == 'r') {
+			on = false;
+			contador = 0;
+			LCD_clear();
+			printw("Reinicio\n");
 			refresh();
 			LCD_home();
 			LCD_write("Reinicio");
@@ -75,22 +79,29 @@ int main(void)
 			}
 			if(mraa_gpio_read(PushB))
 			{
+				while(mraa_gpio_read(PushB));
 				contador++;
 				printw("Contador %d\n", contador);
 				refresh();
 				buf[0] = 0x80;
 				buf[1] = 0xC0;
 				mraa_i2c_write(i2c, buf, 2);
-				LCD_write("Contador %d", contador);
+				LCD_write("Contador ");
+				con = contador + 48;
+				constring = con;
+				LCD_write(constring);
 			}
 			else if(contador == 10)
 			{
-				printw("Contador al maximo\n")
+				printw("Contador al maximo\n");
 				refresh();
 				mraa_gpio_write(ledPin, 1);
 				on = 0;
-				LCD_home();
-				LCD_write("Contador %d Max.", contador);
+				buf[0] = 0x80;
+				buf[1] = 0x10;
+				for(int i = 0; i<10; i++){mraa_i2c_write(i2c,buf,2);}
+				LCD_write("Contador");
+				LCD_write(" Max.");
 			}
 			}
 		}
@@ -98,23 +109,23 @@ int main(void)
 	}
 
 void  LCD_init(){
-  usleep(15);
+  usleep(1);
   buf[0] = 0x80;
   buf[1] = 0x3C;
-  for(int i = 0; i = 3; i++)
+  for(int i = 0; i == 3; i++)
   {
 	  mraa_i2c_write(i2c, buf, 2);
-	  usleep(10);
+	  usleep(2);
   }
   buf[1] = 0x08;
   mraa_i2c_write(i2c, buf, 2);
-  usleep(10);
+  usleep(1);
   buf[1] = 0x0C;
   mraa_i2c_write(i2c, buf, 2);
-  usleep(10);
+  usleep(1);
   buf[1] = 0x06;
   mraa_i2c_write(i2c, buf, 2);
-  usleep(10);
+  usleep(1);
   buf[1] = 0x01;
   mraa_i2c_write(i2c, buf, 2);
 }
@@ -122,7 +133,7 @@ void  LCD_init(){
 void  SetBGColor(int red, int blue, int green){
 	buf[0] = 0x00;
 	buf[2] = 0x00;
-	mraa_i2c_adress(i2c, 0x62);
+	mraa_i2c_address(i2c, 0x62);
 	mraa_i2c_write(i2c, buf, 2);
 	usleep(1);
 	buf[0] = 0x08;
@@ -142,26 +153,30 @@ void  SetBGColor(int red, int blue, int green){
 	mraa_i2c_write(i2c, buf, 2);
 	usleep(1);
 	buf[0] = 0x04;
-	buf[1] = rojo;
-	mraa_i2c_adress(i2c, 0x3E);
+	buf[1] = red;
+	mraa_i2c_address(i2c, 0x3E);
 }
-
 
 void  LCD_home() {
 	buf[0] = 0x80;
 	buf[1] = 0x02;
 	mraa_i2c_write(i2c, buf, 2);
+	usleep(100);
+}
+
+void LCD_clear() {
+	buf[0] = 0x80;
+	buf[1] = 0x01;
+	mraa_i2c_write(i2c, buf, 2);
 	usleep(1);
 }
 
-void  LCD_write(string msg){
+void LCD_write(std::string msg)
+{
   int l = msg.length();
   for( int i = 0; i<l; i++) {
 	  buf[0] = 0x40;
 	  buf[1] = msg.at(i);
 	  mraa_i2c_write(i2c, buf, 2);
-  } 
-}
-  
-
-
+  }
+}	

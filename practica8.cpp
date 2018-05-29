@@ -10,11 +10,7 @@ int PBstop, PBreset, on, c=0, seg=0;
 mraa_gpio_context PBedison;
 mraa_gpio_context ledPin;
 
-void delay(int ms) {
-	clock_t start_time = clock();
-	do {} 
-	while(clock()< start_time + ms) ;
-}
+
 
 int main(void){
 	mraa_init();
